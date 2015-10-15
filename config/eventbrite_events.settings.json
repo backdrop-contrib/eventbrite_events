@@ -1,0 +1,14 @@
+{
+    "_config_name": "eventbrite_events.settings",
+    "eventbrite_events_app_key": "",
+    "eventbrite_events_client_secret": "",
+    "eventbrite_events_user_key": "",
+    "eventbrite_events_token": "",
+    "eventbrite_events_sync": "",
+    "eventbrite_events_ticketWidget": "",
+    "eventbrite_events_registrationWidget": "",
+    "eventbrite_events_calendarWidget": "",
+    "eventbrite_events_countdownWidget": "",
+    "eventbrite_events_buttonWidget": "",
+    "eventbrite_events_linkWidget": ""
+}

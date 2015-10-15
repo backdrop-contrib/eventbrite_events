@@ -1,0 +1,9 @@
+name = Eventbrite Events Manager
+description = An admin section to create and manage Eventbrite events (third-party for selling event tickets) from inside your website
+version = 1.x-1.1
+backdrop = 1.x
+type = module
+configure = admin/config/eventbrite_events
+dependencies[]  = libraries
+dependencies[]  = date
+dependencies[]  = link

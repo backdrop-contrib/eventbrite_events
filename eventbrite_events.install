@@ -1,0 +1,1254 @@
+<?php
+
+/**
+ * @file eventbrite_events.install
+ * Installation and update functions for the eventbrite_events module
+ * Module
+ */
+
+ /**
+ * Implements hook_requirements().
+ */
+function eventbrite_events_api_requirements($phase) {
+  $requirements = array();
+  if ($phase == 'runtime') {
+    $t = get_t();
+    $library = libraries_detect('eventbrite');
+    if (empty($library['installed'])) {
+      $requirements['eventbrite'] = array(
+        'title' => $t('Eventbrite'),
+        'value' => $t('Not found'),
+        'severity' => REQUIREMENT_ERROR,
+        'description' => $t('You need to download !Eventbrite_php and place it into a directory named eventbrite in the %path directory on your server.', array(
+          '!Eventbrite_php' => l($t('Eventbrite.php'), $library['download url']),
+          '%path' => 'libraries'
+        )),
+      );
+    }
+    else {
+      $requirements['eventbrite'] = array(
+        'title' => $t('Eventbrite'),
+        'value' => $t('Found'),
+        'severity' => REQUIREMENT_OK,
+        'description' => $t('The Eventbrite API library is installed.'),
+      );
+    }
+  }
+  return $requirements;
+}
+ 
+/**
+ * Implements hook_install().
+ */
+function eventbrite_events_install()
+{
+    // Add the node type.
+    _eventbrite_events_install_type_create();
+}
+
+
+/**
+ * Creates the order content type.
+ */
+function _eventbrite_events_install_type_create()
+{
+    $type = node_type_load("eventbrite_event"); //Check if content type exists
+    if (empty($type)) { // Create an additional node type.
+        $eventbrite_events_node_type = array(
+            'type' => 'eventbrite_event',
+            'name' => t('EventBrite Event'),
+            'base' => 'node_content',
+            'description' => t('A record of the event created on or for EventBrite'),
+            'custom' => 1,
+            'modified' => 1,
+            'locked' => 1,
+            'is_new' => TRUE,
+            'settings' => array(
+                'promote_enabled' => FALSE
+            )
+        );
+
+        $eventbrite_events_node_type = node_type_set_defaults($eventbrite_events_node_type);
+        node_type_save($eventbrite_events_node_type);
+        node_add_body_field($eventbrite_events_node_type);
+        //////////////////////////////////////////////////////////////////////////
+
+
+// PUBLIC FIELDS
+// Check to see if the field_eb_full_date field already exists.
+        $field = field_info_field('field_eb_full_date');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_full_date',
+                'type' => 'datetime',
+                'cardinality' => 1,
+                'settings' => array(
+                'cache_count' => '4',
+                'cache_enabled' => 0,
+                'granularity' => array(
+                    'day' => 'day',
+                    'hour' => 'hour',
+                    'minute' => 'minute',
+                    'month' => 'month',
+                    'second' => 'second',
+                    'year' => 'year',
+                ),
+                 'timezone_db' => 'UTC',
+                'todate' => 'required',
+                 'tz_handling' => 'site',
+            ),
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_full_date',
+            'label' => t('Event Date'),
+            'description' => t('event full date'),
+            'entity_type' => 'node',
+            'widget' => array(
+            'active' => 1,
+            'module' => 'date',
+            'settings' => array(
+                'increment' => 15,
+                'input_format' => 'm/d/Y - H:i:s',
+                'input_format_custom' => '',
+                'label_position' => 'above',
+                'text_parts' => array(),
+                'year_range' => '-3:+3',
+            ),
+            'type' => 'date_text',
+            'weight' => '1',
+        ),
+        'settings' => array(
+            'cache_count' => '4',
+            'cache_enabled' => 0,
+            'granularity' => array(
+                'day' => 'day',
+                'hour' => 'hour',
+                'minute' => 'minute',
+                'month' => 'month',
+                'second' => 'second',
+                'year' => 'year',
+            ),
+             'timezone_db' => 'UTC',
+            'todate' => 'required',
+             'tz_handling' => 'site',
+        ),
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+// Check to see if the field_eb_num_attendee_rows field already exists.
+        $field = field_info_field('field_eb_num_attendee_rows');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_num_attendee_rows',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_num_attendee_rows',
+            'label' => t('Event Attendees'),
+            'description' => t('like 50'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+// Check to see if the field_eb_capacity field already exists.
+        $field = field_info_field('field_eb_capacity');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_capacity',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_capacity',
+            'label' => t('Event Capacity'),
+            'description' => t('like 50'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+        // Check to see if the field_eb_category field already exists.
+        $field = field_info_field('field_eb_category');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_category',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_category',
+            'label' => t('Event Category'),
+            'description' => t('like 102'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+        // Check to see if the field_eb_tags field already exists.
+        $field = field_info_field('field_eb_tags');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_tags',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_tags',
+            'label' => t('Event Tags'),
+            'description' => t('like formal, fun'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+        
+// EVENT
+// Check to see if the field_eb_id field already exists.
+        $field = field_info_field('field_eb_id');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_id',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_id',
+            'label' => t('Event ID'),
+            'description' => t('Received from Eventbrite -- DO NOT ALTER'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+// Check to see if the field_eb_status field already exists.
+        $field = field_info_field('field_eb_status');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_status',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_status',
+            'label' => t('Event Status'),
+            'description' => t('like Completed'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+// Check to see if the field_eb_start_date field already exists.
+        $field = field_info_field('field_eb_start_date');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_start_date',
+                'type' => 'datetime',
+                'cardinality' => 1,
+                'settings' => array(
+                'cache_count' => '4',
+                'cache_enabled' => 0,
+                'granularity' => array(
+                    'day' => 'day',
+                    'hour' => 'hour',
+                    'minute' => 'minute',
+                    'month' => 'month',
+                    'second' => 'second',
+                    'year' => 'year',
+                ),
+                 'timezone_db' => 'UTC',
+                'todate' => '',
+                 'tz_handling' => 'site',
+            ),
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_start_date',
+            'label' => t('Event Start Date'),
+            'description' => t('Event Start Date'),
+            'entity_type' => 'node',
+            'widget' => array(
+            'active' => 1,
+            'module' => 'date',
+            'settings' => array(
+                'increment' => 15,
+                'input_format' => 'm/d/Y - H:i:s',
+                'input_format_custom' => '',
+                'label_position' => 'above',
+                'text_parts' => array(),
+                'year_range' => '-3:+3',
+            ),
+            'type' => 'date_text',
+            'weight' => '1',
+        ),
+        'settings' => array(
+            'cache_count' => '4',
+            'cache_enabled' => 0,
+            'granularity' => array(
+                'day' => 'day',
+                'hour' => 'hour',
+                'minute' => 'minute',
+                'month' => 'month',
+                'second' => 'second',
+                'year' => 'year',
+            ),
+             'timezone_db' => 'UTC',
+            'todate' => '',
+             'tz_handling' => 'site',
+        ),
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+// Check to see if the field_eb_end_date field already exists.
+        $field = field_info_field('field_eb_end_date');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_end_date',
+                'type' => 'datetime',
+                'cardinality' => 1,
+                'settings' => array(
+                'cache_count' => '4',
+                'cache_enabled' => 0,
+                'granularity' => array(
+                    'day' => 'day',
+                    'hour' => 'hour',
+                    'minute' => 'minute',
+                    'month' => 'month',
+                    'second' => 'second',
+                    'year' => 'year',
+                ),
+                 'timezone_db' => 'UTC',
+                'todate' => '',
+                 'tz_handling' => 'site',
+            ),
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_end_date',
+            'label' => t('Event End Date'),
+            'description' => t('Event End Date'),
+            'entity_type' => 'node',
+            'widget' => array(
+            'active' => 1,
+            'module' => 'date',
+            'settings' => array(
+                'increment' => 15,
+                'input_format' => 'm/d/Y - H:i:s',
+                'input_format_custom' => '',
+                'label_position' => 'above',
+                'text_parts' => array(),
+                'year_range' => '-3:+3',
+            ),
+            'type' => 'date_text',
+            'weight' => '1',
+        ),
+        'settings' => array(
+            'cache_count' => '4',
+            'cache_enabled' => 0,
+            'granularity' => array(
+                'day' => 'day',
+                'hour' => 'hour',
+                'minute' => 'minute',
+                'month' => 'month',
+                'second' => 'second',
+                'year' => 'year',
+            ),
+             'timezone_db' => 'UTC',
+            'todate' => '',
+             'tz_handling' => 'site',
+        ),
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+// Check to see if the field_eb_locale field already exists.
+        $field = field_info_field('field_eb_locale');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_locale',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_locale',
+            'label' => t('Event Locale'),
+            'description' => t('like en_US'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+///
+// Check to see if the field_eb_timezone field already exists.
+        $field = field_info_field('field_eb_timezone');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_timezone',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_timezone',
+            'label' => t('Event Timezone'),
+            'description' => t('like America/Los_Angeles'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+// Check to see if the field_eb_timezone_offset field already exists.
+        $field = field_info_field('field_eb_timezone_offset');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_timezone_offset',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_timezone_offset',
+            'label' => t('Event Timezone Offset'),
+            'description' => t('like GMT-0800'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+// Check to see if the field_eb_organizer_name field already exists.
+        $field = field_info_field('field_eb_organizer_name');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_organizer_name',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_organizer_name',
+            'label' => t('Event Organizer Name'),
+            'description' => t('like Jane Smith'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+// Check to see if the field_eb_organizer_id field already exists.
+        $field = field_info_field('field_eb_organizer_id');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_organizer_id',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_organizer_id',
+            'label' => t('Event Organizer ID'),
+            'description' => t('Received from Eventbrite -- DO NOT ALTER'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+
+// Check to see if the field_eb_organizer_description field already exists.
+        $field = field_info_field('field_eb_organizer_description');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_organizer_description',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_organizer_description',
+            'label' => t('Event Organizer Bio'),
+            'description' => t('like Jane is a great speaker, employee, spouse and/or mother.'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+// Check to see if the field_eb_organizer_url field already exists.
+        $field = field_info_field('field_eb_organizer_url');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_organizer_url',
+                'type' => 'link_field',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_organizer_url',
+            'label' => t('Event Organizer Url'),
+            'description' => t('Received from Eventbrite -- DO NOT ALTER'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event',
+            'widget'      => array(
+            'type'    => 'link',
+             ),
+            'settings' => array(
+            'title' => 'value',
+            'title_value' => '-link-',
+            'enable_tokens' => 0,
+            'attributes' => array(
+            'target' => '_blank',
+            ),
+    ),
+        );
+        field_create_instance($instance);
+        ///
+// DESIGN
+// Check to see if the field_eb_text_color field already exists.
+        $field = field_info_field('field_eb_text_color');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_text_color',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_text_color',
+            'label' => t('Event Text Color'),
+            'description' => t('like 99AABB'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+        // Check to see if the field_eb_title_text_color field already exists.
+        $field = field_info_field('field_eb_title_text_color');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_title_text_color',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_title_text_color',
+            'label' => t('Event Title Text Color'),
+            'description' => t('like 99AABB'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+// Check to see if the field_eb_link_color field already exists.
+        $field = field_info_field('field_eb_link_color');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_link_color',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_link_color',
+            'label' => t('Event Link Color'),
+            'description' => t('like 99AABB'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+// Check to see if the field_eb_box_header_text_color field already exists.
+        $field = field_info_field('field_eb_box_header_text_color');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_box_header_text_color',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_box_header_text_color',
+            'label' => t('Event Box Header Text Color'),
+            'description' => t('like 99AABB'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+///
+// Check to see if the field_eb_box_header_bg_color field already exists.
+        $field = field_info_field('field_eb_box_header_bg_color');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_box_header_bg_color',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_box_header_bg_color',
+            'label' => t('Event Box Header Background'),
+            'description' => t('like 99AABB'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+// Check to see if the field_eb_box_border_color field already exists.
+        $field = field_info_field('field_eb_box_border_color');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_box_border_color',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_box_border_color',
+            'label' => t('Event Box Border Color'),
+            'description' => t('like 99AABB'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+// Check to see if the field_eb_box_background_color field already exists.
+        $field = field_info_field('field_eb_box_background_color');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_box_background_color',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_box_background_color',
+            'label' => t('Event Box Background Color'),
+            'description' => t('like 99AABB'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+        ///
+// Check to see if the field_eb_background_color field already exists.
+        $field = field_info_field('field_eb_background_color');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_background_color',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_background_color',
+            'label' => t('Event Background Color'),
+            'description' => t('like 99AABB'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+// SETTINGS FIELDS
+// Check to see if the field_eb_listed field already exists.
+        $field = field_info_field('field_eb_listed');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_listed',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_listed',
+            'label' => t('Event Listed'),
+            'description' => t('like true'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+///
+// Check to see if the field_eb_shareable field already exists.
+        $field = field_info_field('field_eb_shareable');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_shareable',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_shareable',
+            'label' => t('Event Shareable'),
+            'description' => t('like true'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+/// 
+// Check to see if the field_eb_invite_only field already exists.
+        $field = field_info_field('field_eb_invite_only');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_invite_only',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_invite_only',
+            'label' => t('Event Invite Only'),
+            'description' => t('like false'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+/// 
+// Check to see if the field_eb_online_event field already exists.
+        $field = field_info_field('field_eb_online_event');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_online_event',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_online_event',
+            'label' => t('Event Online Event'),
+            'description' => t('like false'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+/// 
+// Check to see if the field_eb_show_remaining field already exists.
+        $field = field_info_field('field_eb_show_remaining');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_show_remaining',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_show_remaining',
+            'label' => t('Event Show Remaining'),
+            'description' => t('like false'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+///
+// Check to see if the field_eb_currency field already exists.
+        $field = field_info_field('field_eb_currency');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_currency',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_currency',
+            'label' => t('Event Currency'),
+            'description' => t('like usd'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+///
+// Check to see if the field_eb_venue_id field already exists.
+        $field = field_info_field('field_eb_venue_id');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_venue_id',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_venue_id',
+            'label' => t('Event Venue ID'),
+            'description' => t('Received from Eventbrite -- DO NOT ALTER'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+///
+// Check to see if the field_eb_format_id field already exists.
+        $field = field_info_field('field_eb_format_id');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_format_id',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_format_id',
+            'label' => t('Event Format ID'),
+            'description' => t('Received from Eventbrite -- DO NOT ALTER'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+///
+// Check to see if the field_eb_logo_id field already exists.
+        $field = field_info_field('field_eb_logo_id');
+        // If the field does not exist then create it.
+        if (empty($field)) {
+            $field = array(
+                'field_name' => 'field_eb_logo_id',
+                'type' => 'text',
+                'entity_types' => array(
+                    'node'
+                )
+            );
+            field_create_field($field);
+        }
+        $instance = array(
+            'field_name' => 'field_eb_logo_id',
+            'label' => t('Event Logo ID'),
+            'description' => t('Received from Eventbrite -- DO NOT ALTER'),
+            'entity_type' => 'node',
+            'bundle' => 'eventbrite_event'
+        );
+        field_create_instance($instance);
+
+    }
+}
+
+function eventbrite_events_update_1000() {
+  // $config = config('form_validation_scripts.settings');
+
+  // $config->set('form_validation_scripts_1', update_variable_get('form_validation_scripts_1'));
+  // $config->set('form_validation_scripts_2', update_variable_get('form_validation_scripts_2'));
+  // $config->set('form_validation_scripts_3', update_variable_get('form_validation_scripts_3'));
+  // $config->set('form_validation_scripts_4', update_variable_get('form_validation_scripts_4'));
+  // $config->save();
+
+  // Delete variables.
+  // update_variable_del('form_validation_scripts_1');
+  // update_variable_del('form_validation_scripts_2');
+  // update_variable_del('form_validation_scripts_3');
+  // update_variable_del('form_validation_scripts_4');
+}
+
+
+/**
+ * Implements hook_uninstall().
+ */
+function eventbrite_events_uninstall()
+{
+    $fieldname = "field_eb_box_header_text_color";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+    $fieldname = "field_eb_locale";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+  $fieldname = "field_eb_link_color";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+
+    $fieldname = "field_eb_box_background_color";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+
+$fieldname = "field_eb_box_border_color";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+
+$fieldname = "field_eb_timezone";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+
+    $fieldname = "field_eb_organizer_url";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+$fieldname = "field_eb_organizer_description";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+    $fieldname = "field_eb_organizer_id";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+
+$fieldname = "field_eb_organizer_name";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+
+    $fieldname = "field_eb_background_color";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+$fieldname = "field_eb_id";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+
+$fieldname = "field_eb_category";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+
+    $fieldname = "field_eb_box_header_bg_color";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+
+$fieldname = "field_eb_capacity";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+    $fieldname = "field_eb_num_attendee_rows";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+    $fieldname = "field_eb_start_date";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+
+$fieldname = "field_eb_status";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+
+    $fieldname = "field_eb_end_date";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+
+    $fieldname = "field_eb_tags";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+
+    $fieldname = "field_eb_timezone_offset";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+
+    $fieldname = "field_eb_text_color";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+
+    $fieldname = "field_eb_title_text_color";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+    $fieldname = "field_eb_listed";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+    $fieldname = "field_eb_shareable";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+    $fieldname = "field_eb_invite_only";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+    $fieldname = "field_eb_online_event";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+    $fieldname = "field_eb_show_remaining";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+    $fieldname = "field_eb_currency";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+    $fieldname = "field_eb_venue_id";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+    $fieldname = "field_eb_format_id";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+    $fieldname = "field_eb_logo_id";
+    if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
+        field_delete_instance($field);
+    }
+    if ($field = field_info_field($fieldname)) {
+        field_delete_field($fieldname);
+    }
+    
+    
+    $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
+  $result = db_query($sql, array(
+    ':type' => 'eventbrite_event'
+  ));
+  $nids = array();
+  foreach ($result as $row) {
+    $nids[] = $row->nid;
+  }
+  node_delete_multiple($nids);
+  node_type_delete('eventbrite_event');
+    
+    
+    
+    // Purge all field infromation
+    // http://api.drupal.org/api/function/field_purge_batch/7
+    field_purge_batch(1000);
+    backdrop_flush_all_caches();
+    field_cache_clear();
+}
