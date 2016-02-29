@@ -25,11 +25,7 @@ function eventbrite_events_libraries_info()
         'name' => 'Eventbrite API PHP Library',
         'vendor url' => 'https://github.com/ryanj/eventbrite.php',
         'download url' => 'https://github.com/ryanj/eventbrite.php',
-        'version arguments' => array(
-            'file' => 'README.md',
-            'pattern' => '/#PHP/',
-            'lines' => 1
-        ),
+        'version callback' => 'short_circuit_version',
         'files' => array(
             'php' => array(
                 'Eventbrite.php'
@@ -37,6 +33,13 @@ function eventbrite_events_libraries_info()
         )
     );
     return $libraries;
+}
+
+/**
+* Short-circuit the version argument.
+*/
+function short_circuit_version() {
+  return TRUE;
 }
 
 /**
@@ -64,13 +67,12 @@ function eventbrite_events_permission()
  * Implements hook_init().
  */
 function eventbrite_events_init() {
-require_once backdrop_get_path('module', 'eventbrite_events') . '/Eventbrite.php';
+  $library = libraries_load('eventbrite');
 
-$library = libraries_load('eventbrite');
     if (($library = libraries_load('eventbrite')) && !empty($library['loaded'])) {
         return TRUE;
     } else {
-        backdrop_set_message("You have enabled the eventbrite events module without adding the eventbrite processing library.  Please visit the status report to learn more.", "error");
+        backdrop_set_message("You have enabled the Eventbrite Events module without adding the Eventbrite processing library.  Please follow the steps in the Readme file of this module to complete installation.", "error");
     }
 
 }
@@ -89,11 +91,11 @@ backdrop_goto("/");
 
 function eventbrite_events_form_eventbrite_event_node_form_alter(&$form, &$form_state, $form_id) {
 
-backdrop_add_css(backdrop_get_path('module', 'eventbrite_events') . "/css/eventbrite_events.css");
+  backdrop_add_css(backdrop_get_path('module', 'eventbrite_events') . "/css/eventbrite_events.css");
 
-if ($form['nid']['#value'] != NULL)
-{
-backdrop_set_message("To preserve event integrity between Eventbrite and this website, only the following fields will be modified on save here: title, body, and capacity.  To change the other options, please use Eventbrite.com.  This module is mainly for displaying your event information in different ways.", "warning");
+  if ($form['nid']['#value'] != NULL)
+  {
+  backdrop_set_message("To preserve event integrity between Eventbrite and this website, only the following fields will be modified on save here: title, body, and capacity.  To change the other options, please use Eventbrite.com.  This module is mainly for displaying your event information in different ways.", "warning");
 
   $form['actions']['submit'] = array(
     '#type' => 'submit',
@@ -111,7 +113,7 @@ backdrop_set_message("To preserve event integrity between Eventbrite and this we
     '#submit' => array('eventbrite_events_save_new_day'),
     '#weight' => 1,
   );
-  
+
   $form['actions']['submit3'] = array(
     '#type' => 'submit',
     '#value' => t('Clone to Following Week'),
@@ -121,10 +123,10 @@ backdrop_set_message("To preserve event integrity between Eventbrite and this we
   );
   }
 }
-else
-{
-backdrop_set_message("Events created on this page will NOT be posted or synced to Eventbrite.  Add at YOUR OWN RISK because they are only for your eyes.  A good process instead is to post on Eventbrite or Edit and Clone an event from this website.", "warning");
-}
+  else
+  {
+  backdrop_set_message("Events created on this page will NOT be posted or synced to Eventbrite.  Add at YOUR OWN RISK because they are only for your eyes.  A good process instead is to post on Eventbrite or Edit and Clone an event from this website.", "warning");
+  }
 
 }
 
@@ -233,8 +235,8 @@ $node->save();
 else
 {
 backdrop_set_message("Event not saved.  Error processing the Eventbrite Event Url: " . $result->error . " " . $result->status_message, "warning");
-}  
-} 
+}
+}
 }
 
 
@@ -319,7 +321,7 @@ $options = array(
                      'timeout' => 15,
                      'headers' => array('Content-Type' => 'application/x-www-form-urlencoded'),
              );
- 
+
 $app_token = config_get('eventbrite_events.settings', 'eventbrite_events_token');
 if ( isset($app_token) && ($app_token != "") && isset($data) && ($data != "") ) {
 $result = backdrop_http_request('https://www.eventbriteapi.com/v3/events/?token=' . $app_token, $options);
@@ -343,15 +345,15 @@ $node->save();
 else
 {
 backdrop_set_message("Event not saved.  Error processing the Eventbrite Event Url: " . $result->error . " " . $result->status_message, "warning");
-}  
-} 
+}
+}
 }
 
 
 
 
 function eventbrite_event_node_form_validate($form, &$form_state) {
-dsm("correct validate");
+
 }
 
 function eventbrite_event_node_form_submit($form, &$form_state) {
@@ -391,7 +393,7 @@ $node->field_eb_shareable['und'][0]['value'] = $form_state['values']['field_eb_s
 }
 
 $app_token = config_get('eventbrite_events.settings', 'eventbrite_events_token');
-if ( isset($app_token) && ($app_token != "") && isset($data) && ($data != "") ) { 
+if ( isset($app_token) && ($app_token != "") && isset($data) && ($data != "") ) {
 $options = array(
                   'method' => 'POST',
                   'data' => $data,
@@ -408,7 +410,7 @@ $node->save();
 else
 {
 backdrop_set_message("Event not saved. Error processing the Eventbrite Event Url: " . $result->error . " " . $result->status_message, "warning");
-} 
+}
 
 
 }
@@ -453,7 +455,7 @@ function eventbrite_events_menu() {
  * Implements hook_node_view().
  */
 function eventbrite_events_node_view($node, $view_mode, $langcode) {
-    
+
     if ($view_mode != "rss") {
     if ($node->type == "eventbrite_event") {
 
@@ -461,13 +463,13 @@ function eventbrite_events_node_view($node, $view_mode, $langcode) {
       if (empty($field_eb_id) ) {
       }
       else {
-$app_key = config_get('eventbrite_events.settings', 'eventbrite_events_app_key');
-$user_key = config_get('eventbrite_events.settings', 'eventbrite_events_user_key');
-$app_token = config_get('eventbrite_events.settings', 'eventbrite_events_token');
-if( isset($app_key) && isset($user_key) && isset($app_token) && ($app_key != "") && ($user_key != "") && ($app_token != "")) {
+        $app_key = config_get('eventbrite_events.settings', 'eventbrite_events_app_key');
+        $user_key = config_get('eventbrite_events.settings', 'eventbrite_events_user_key');
+        $app_token = config_get('eventbrite_events.settings', 'eventbrite_events_token');
+        if( isset($app_key) && isset($user_key) && isset($app_token) && ($app_key != "") && ($user_key != "") && ($app_token != "")) {
       $authentication_tokens = array('app_key'  => $app_key, 'user_key' => $user_key);
       $eb_client = new Eventbrite( $authentication_tokens );
-      
+
       $ticketWidget = config_get('eventbrite_events.settings', 'eventbrite_events_ticketWidget');
       if ($ticketWidget > 0)
       {
@@ -477,7 +479,7 @@ if( isset($app_key) && isset($user_key) && isset($app_token) && ($app_key != "")
          '#weight' => 50,
        );
       }
-      
+
       $registrationWidget = config_get('eventbrite_events.settings', 'eventbrite_events_registrationWidget');
       if ($registrationWidget > 0)
       {
@@ -487,7 +489,7 @@ if( isset($app_key) && isset($user_key) && isset($app_token) && ($app_key != "")
          '#weight' => 50,
        );
       }
-      
+
       $calendarWidget = config_get('eventbrite_events.settings', 'eventbrite_events_calendarWidget');
       if ($calendarWidget > 0)
       {
@@ -497,7 +499,7 @@ if( isset($app_key) && isset($user_key) && isset($app_token) && ($app_key != "")
          '#weight' => 50,
        );
       }
-      
+
       $countdownWidget = config_get('eventbrite_events.settings', 'eventbrite_events_countdownWidget');
       if ($countdownWidget > 0)
       {
@@ -507,7 +509,7 @@ if( isset($app_key) && isset($user_key) && isset($app_token) && ($app_key != "")
          '#weight' => 50,
        );
       }
-      
+
       $buttonWidget = config_get('eventbrite_events.settings', 'eventbrite_events_buttonWidget');
       if ($buttonWidget > 0)
       {
@@ -517,7 +519,7 @@ if( isset($app_key) && isset($user_key) && isset($app_token) && ($app_key != "")
          '#weight' => 50,
        );
       }
-      
+
       $linkWidget = config_get('eventbrite_events.settings', 'eventbrite_events_linkWidget');
       if ($linkWidget > 0)
       {
@@ -527,7 +529,7 @@ if( isset($app_key) && isset($user_key) && isset($app_token) && ($app_key != "")
          '#weight' => 50,
        );
       }
-      
+
       }
     }
     }

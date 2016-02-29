@@ -8,67 +8,73 @@
 
 function eventbrite_events_admin_settings($form, &$form_state) {
 
+  $form['eventbrite_events_display_keys'] = array(
+    '#type' => 'markup',
+    '#title' => t('Step 1 -- site administrators enter your Eventbrite API keys'),
+    '#markup' => '<p>' . l(t('Step 1 -- enter your Eventbrite API keys'), 'admin/config/eventbrite_events/keys') . '</p>'
+  );
+
   $form['eventbrite_events_display_link'] = array(
     '#type' => 'markup',
-    '#title' => t('Manage display of event pages'),
-    '#markup' => '<p>' . l(t('Manage display of event pages'), 'admin/structure/types/manage/eventbrite_event/display') . '</p>'
+    '#title' => t('Step 2 -- Manage display of event pages, showing and hiding the data for each event that is needed for your web pages.'),
+    '#markup' => '<p>' . l(t('Step 2 -- Manage display of event pages, showing and hiding the data for each event that is needed for your web pages.'), 'admin/structure/types/manage/eventbrite_event/display') . '</p>'
   );
-  
-  $form['eventbrite_events_info'] = array(
-    '#type' => 'markup',
-    '#title' => t('Event ticket widgets for your event pages.'),
-    '#markup' => '<p>' . t('Step 1: enter your account information from above and save.<br>Step 2: sync your events.<br>Then, you may wish to choose a widget to add to the bottom of each public event page.  It is probably best practice to choose only one.  Widgets behave according to current date/status and Eventbrite rules and may not work as expected in all situations.') . '</p>'
-  );
-  
+
   $form['eventbrite_events_sync'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Pull down your Eventbrite events into this site and sync'),
-    '#description' => t('Check this box to pull down your Eventbrite events into this site and sync'),
+    '#title' => t('Step 3 -- Check this box and press Save below to pull down your events from Eventbrite into this site and sync'),
+    '#description' => t('Step 3 -- Check this box and press Save below to pull down your events from Eventbrite into this site and sync'),
     '#default_value' => config_get('eventbrite_events.settings', 'eventbrite_events_sync'),
   );
-  
+
+$form['eventbrite_events_info'] = array(
+    '#type' => 'markup',
+    '#title' => t('Step 4 -- select your event widgets to show on each event page'),
+    '#markup' => '<p>' . t('Step 4 -- select your event widgets to show on each event page  It is probably best practice to choose only one.  Widgets behave according to current date/status and Eventbrite rules and may not work as expected in all situations.') . '</p>'
+  );
+
   $form['eventbrite_events_ticketWidget'] = array(
     '#type' => 'checkbox',
     '#title' => t('Attach a ticket widget to your event pages'),
     '#description' => t('Check this box to attach a ticket badge to your event pages'),
     '#default_value' => config_get('eventbrite_events.settings', 'eventbrite_events_ticketWidget'),
   );
-  
+
   $form['eventbrite_events_registrationWidget'] = array(
     '#type' => 'checkbox',
     '#title' => t('Attach a registration widget to your event pages'),
     '#description' => t('Check this box to attach a registration badge to your event pages'),
     '#default_value' => config_get('eventbrite_events.settings', 'eventbrite_events_registrationWidget'),
   );
-  
+
   $form['eventbrite_events_calendarWidget'] = array(
     '#type' => 'checkbox',
     '#title' => t('Attach a calendar widget to your event pages'),
     '#description' => t('Check this box to attach a calendar badge to your event pages'),
     '#default_value' => config_get('eventbrite_events.settings', 'eventbrite_events_calendarWidget'),
   );
-  
+
   $form['eventbrite_events_countdownWidget'] = array(
     '#type' => 'checkbox',
     '#title' => t('Attach a countdown widget to your event pages'),
     '#description' => t('Check this box to attach a countdown badge to your event pages'),
     '#default_value' => config_get('eventbrite_events.settings', 'eventbrite_events_countdownWidget'),
   );
-  
+
   $form['eventbrite_events_buttonWidget'] = array(
     '#type' => 'checkbox',
     '#title' => t('Attach a button widget to your event pages'),
     '#description' => t('Check this box to attach a button to your event pages'),
     '#default_value' => config_get('eventbrite_events.settings', 'eventbrite_events_buttonWidget'),
   );
-  
+
   $form['eventbrite_events_linkWidget'] = array(
     '#type' => 'checkbox',
     '#title' => t('Attach a link widget to your event pages'),
     '#description' => t('Check this box to attach a link to your event pages'),
     '#default_value' => config_get('eventbrite_events.settings', 'eventbrite_events_linkWidget'),
   );
-  
+
   $form['actions']['#type'] = 'actions';
   $form['actions']['submit'] = array(
     '#type' => 'submit',

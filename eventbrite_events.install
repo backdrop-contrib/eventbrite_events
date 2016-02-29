@@ -11,6 +11,7 @@
  */
 function eventbrite_events_api_requirements($phase) {
   $requirements = array();
+
   if ($phase == 'runtime') {
     $t = get_t();
     $library = libraries_detect('eventbrite');
@@ -36,7 +37,7 @@ function eventbrite_events_api_requirements($phase) {
   }
   return $requirements;
 }
- 
+
 /**
  * Implements hook_install().
  */
@@ -230,7 +231,7 @@ function _eventbrite_events_install_type_create()
         );
         field_create_instance($instance);
         ///
-        
+
 // EVENT
 // Check to see if the field_eb_id field already exists.
         $field = field_info_field('field_eb_id');
@@ -571,6 +572,9 @@ function _eventbrite_events_install_type_create()
             'enable_tokens' => 0,
             'attributes' => array(
             'target' => '_blank',
+            'rel' => '',
+            'class' => '',
+            'title' => ''
             ),
     ),
         );
@@ -796,7 +800,7 @@ function _eventbrite_events_install_type_create()
             'bundle' => 'eventbrite_event'
         );
         field_create_instance($instance);
-/// 
+///
 // Check to see if the field_eb_invite_only field already exists.
         $field = field_info_field('field_eb_invite_only');
         // If the field does not exist then create it.
@@ -818,7 +822,7 @@ function _eventbrite_events_install_type_create()
             'bundle' => 'eventbrite_event'
         );
         field_create_instance($instance);
-/// 
+///
 // Check to see if the field_eb_online_event field already exists.
         $field = field_info_field('field_eb_online_event');
         // If the field does not exist then create it.
@@ -840,7 +844,7 @@ function _eventbrite_events_install_type_create()
             'bundle' => 'eventbrite_event'
         );
         field_create_instance($instance);
-/// 
+///
 // Check to see if the field_eb_show_remaining field already exists.
         $field = field_info_field('field_eb_show_remaining');
         // If the field does not exist then create it.
@@ -983,7 +987,7 @@ function eventbrite_events_uninstall()
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
+
     $fieldname = "field_eb_locale";
     if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
         field_delete_instance($field);
@@ -991,7 +995,7 @@ function eventbrite_events_uninstall()
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
+
   $fieldname = "field_eb_link_color";
     if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
         field_delete_instance($field);
@@ -1031,7 +1035,7 @@ $fieldname = "field_eb_timezone";
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
+
 $fieldname = "field_eb_organizer_description";
     if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
         field_delete_instance($field);
@@ -1039,7 +1043,7 @@ $fieldname = "field_eb_organizer_description";
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
+
     $fieldname = "field_eb_organizer_id";
     if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
         field_delete_instance($field);
@@ -1063,7 +1067,7 @@ $fieldname = "field_eb_organizer_name";
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
+
 $fieldname = "field_eb_id";
     if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
         field_delete_instance($field);
@@ -1095,7 +1099,7 @@ $fieldname = "field_eb_capacity";
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
+
     $fieldname = "field_eb_num_attendee_rows";
     if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
         field_delete_instance($field);
@@ -1103,7 +1107,7 @@ $fieldname = "field_eb_capacity";
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
+
     $fieldname = "field_eb_start_date";
     if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
         field_delete_instance($field);
@@ -1159,7 +1163,7 @@ $fieldname = "field_eb_status";
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
+
     $fieldname = "field_eb_listed";
     if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
         field_delete_instance($field);
@@ -1167,7 +1171,7 @@ $fieldname = "field_eb_status";
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
+
     $fieldname = "field_eb_shareable";
     if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
         field_delete_instance($field);
@@ -1175,7 +1179,7 @@ $fieldname = "field_eb_status";
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
+
     $fieldname = "field_eb_invite_only";
     if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
         field_delete_instance($field);
@@ -1183,7 +1187,7 @@ $fieldname = "field_eb_status";
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
+
     $fieldname = "field_eb_online_event";
     if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
         field_delete_instance($field);
@@ -1191,7 +1195,7 @@ $fieldname = "field_eb_status";
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
+
     $fieldname = "field_eb_show_remaining";
     if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
         field_delete_instance($field);
@@ -1199,7 +1203,7 @@ $fieldname = "field_eb_status";
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
+
     $fieldname = "field_eb_currency";
     if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
         field_delete_instance($field);
@@ -1207,7 +1211,7 @@ $fieldname = "field_eb_status";
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
+
     $fieldname = "field_eb_venue_id";
     if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
         field_delete_instance($field);
@@ -1215,7 +1219,7 @@ $fieldname = "field_eb_status";
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
+
     $fieldname = "field_eb_format_id";
     if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
         field_delete_instance($field);
@@ -1223,7 +1227,7 @@ $fieldname = "field_eb_status";
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
+
     $fieldname = "field_eb_logo_id";
     if ($field = field_info_instance('node', $fieldname, 'eventbrite_event')) {
         field_delete_instance($field);
@@ -1231,8 +1235,8 @@ $fieldname = "field_eb_status";
     if ($field = field_info_field($fieldname)) {
         field_delete_field($fieldname);
     }
-    
-    
+
+
     $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
   $result = db_query($sql, array(
     ':type' => 'eventbrite_event'
@@ -1243,9 +1247,9 @@ $fieldname = "field_eb_status";
   }
   node_delete_multiple($nids);
   node_type_delete('eventbrite_event');
-    
-    
-    
+
+
+
     // Purge all field infromation
     // http://api.drupal.org/api/function/field_purge_batch/7
     field_purge_batch(1000);
